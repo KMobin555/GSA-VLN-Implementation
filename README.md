@@ -50,16 +50,9 @@ Scene graphs + persistent memory (GraphMap) enable robots to:
 ```
 GSA-VLN-Implementation/
 ├── README.md                          # This file
-├── GSA-VLN-TRAINED.ipynb             # MAIN: Full paper replication
+├── GSA-VLN-Original.ipynb             # MAIN: Full paper replication
 ├── GSA-VLN-SEMANTIC.ipynb            # IMPROVEMENT 1: Semantic-aware navigation
 ├── GSA-VLN-REPLAY.ipynb              # IMPROVEMENT 2: Experience replay
-├── GSA-VLN-SIMPLIFIED.ipynb          # BONUS: Proof-of-concept demo
-├── docs/
-│   ├── PRESENTATION.md               # Full presentation slides
-│   └── PAPER_SUMMARY.md              # Detailed paper explanation
-└── results/
-    ├── semantic_comparison.png       # Semantic-aware results
-    └── replay_learning_curves.png    # Replay buffer results
 ```
 
 ---
@@ -266,220 +259,6 @@ Better Stability + Better Generalization
 **Solution**: Keep buffer of 500 successful trajectories, replay during training
 **Expected Benefit**: 10-15% improvement on late-episode performance, better stability
 **Status**: Fully implemented in GSA-VLN-REPLAY.ipynb
-
----
-
-## 📊 Using Real R2R Dataset
-
-### Why Use Real Data?
-Your synthetic dataset is great for **understanding concepts**, but for a strong PhD submission, real data shows:
-- Your method generalizes to real-world complexity
-- Handles real instruction variations
-- Demonstrates SOTA-level thinking
-
-### Step-by-Step: Integrate Real R2R Data
-
-#### Step 1: Download R2R Annotations (5 minutes)
-```bash
-# These are free! (No visual features needed for this implementation)
-cd ~/Downloads
-git clone https://github.com/pjlintw/Room-to-Room-Dataset.git
-
-# This gives you:
-# - R2R_train.json (train split)
-# - R2R_val_seen.json (validation on seen buildings)
-# - R2R_val_unseen.json (test on unseen buildings)
-```
-
-#### Step 2: Load Real Data into Your Notebook
-```python
-import json
-
-# Load R2R annotations
-with open('/path/to/Room-to-Room-Dataset/R2R_train.json', 'r') as f:
-    r2r_data = json.load(f)
-
-# Structure: List of instructions like:
-# {
-#   'path_id': 'train_0',
-#   'scan': '2t7WUuJeP7c',  # Building ID
-#   'heading': 0.0,
-#   'start_room': 'bathroom',
-#   'end_room': 'kitchen',
-#   'instructions': [
-#     'Go through the bathroom and into the bedroom...',
-#     'Walk past the bathroom to the kitchen...',
-#   ],
-#   'path': ['66ee69e..', '7a827f8..', ...]  # Viewpoint sequence
-# }
-
-print(f"Total instructions: {len(r2r_data)}")
-print(f"First example: {r2r_data[0]}")
-```
-
-#### Step 3: Create Modified Dataset Class
-```python
-class R2RRealDataset:
-    """Load actual R2R navigation data"""
-    
-    def __init__(self, json_path, num_scenes=50, instr_per_scene=5):
-        with open(json_path, 'r') as f:
-            self.raw_data = json.load(f)
-        
-        self.instructions = []
-        self.vocab = self._build_vocab()
-        
-        # Sample a subset (all 10k+ is too much for testing)
-        sampled = self.raw_data[:num_scenes * instr_per_scene]
-        
-        for item in sampled:
-            for instr in item['instructions']:
-                inst = NavigationInstance(
-                    scene_id=item['scan'],  # Real building ID
-                    instruction_id=f"{item['scan']}_{len(self.instructions)}",
-                    instruction=instr,  # Real natural language
-                    path=item['path'],  # Real viewpoint sequence
-                    trajectory=[{'viewpoint': vp} for vp in item['path']]
-                )
-                self.instructions.append(inst)
-    
-    def _build_vocab(self):
-        # Can use real vocab from R2R paper or simple tokenizer
-        from transformers import BertTokenizer
-        tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        return tokenizer.vocab
-```
-
-#### Step 4: Extract Visual Features
-```python
-# Option A: Use pretrained features (recommended, faster)
-# R2R paper uses ResNet-152 features from official repo
-import torch
-from torchvision import models
-
-backbone = models.resnet152(pretrained=True)
-backbone = torch.nn.Sequential(*list(backbone.children())[:-1])
-
-# For each viewpoint, extract 2048-dim feature vector
-# (In practice, R2R provides precomputed features)
-
-# Option B: Use CLIP embeddings (modern alternative)
-from transformers import CLIPModel, CLIPProcessor
-
-model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-
-# Process images: 
-# img = load_pano_image(viewpoint_id)  
-# image_features = model.get_image_features(**processor(img))
-```
-
-#### Step 5: Build Scene Graphs from Real Connectivity
-```python
-# R2R provides real building connectivity!
-import networkx as nx
-
-class R2RSceneGraph:
-    """Build from real R2R graph structure"""
-    
-    def __init__(self, scan_id):
-        # Load precomputed connectivity from R2R official
-        # (Available in GSA-VLN-main/connectivity/[scan_id]_connectivity.json)
-        
-        with open(f'connectivity/{scan_id}_connectivity.json') as f:
-            connectivity = json.load(f)
-        
-        self.graph = nx.Graph()
-        
-        # Add edges between reachable viewpoints
-        for vp in connectivity:
-            if vp['included']:  # Viewpoint is in R2R
-                for neighbor in vp['unobstructed']:
-                    self.graph.add_edge(vp['image_id'], neighbor)
-        
-        self.num_nodes = len(self.graph.nodes())
-        print(f"Built real scene graph: {self.num_nodes} viewpoints")
-```
-
-#### Step 6: Train with Real Data
-```python
-# Now use real dataset exactly like synthetic!
-real_dataset = R2RRealDataset('R2R_train.json', num_scenes=50)
-print(f"Loaded {len(real_dataset.instructions)} real instructions")
-
-# Create model and agent (code is 100% identical)
-model = GSAVLNModel(vocab_size=len(real_dataset.vocab), hidden_dim=256)
-agent = NavigationAgent(model, real_dataset)
-
-# Training loop is identical
-# model trains on real instructions with real connectivity!
-results = train_agent(agent, real_dataset, num_episodes=100)
-
-# Evaluation: 
-# - Success Rate: Did agent reach target viewpoint?
-# - SPL (Success weighted by Path Length): Efficiency metric
-# - NDCG: Ranking quality of predicted paths
-```
-
-#### Step 7: Compare Results
-```python
-# Results comparison table
-comparison = {
-    'Synthetic': {
-        'Success Rate': '50%',
-        'Avg Path Length': '8.3 steps',
-        'Training Time': '5 min',
-        'Dataset Size': '50 trajectories',
-    },
-    'Real R2R (ours)': {
-        'Success Rate': '62%',
-        'Avg Path Length': '9.1 steps',  
-        'Training Time': '30 min',
-        'Dataset Size': '5000+ real trajectories',
-    },
-    'GSA-VLN (paper)': {
-        'Success Rate': '68%',
-        'Avg Path Length': '9.8 steps',
-        'Training Time': 'Not disclosed',
-        'Dataset Size': '10,000 trajectories',
-    }
-}
-
-# Your results should be between synthetic and SOTA
-# (Gap due to using subset of data + shorter training)
-```
-
-### File Structure for Real R2R
-```
-your-workspace/
-├── Room-to-Room-Dataset/
-│   ├── R2R_train.json
-│   ├── R2R_val_seen.json
-│   └── R2R_val_unseen.json
-├── connectivity/
-│   ├── 2t7WUuJeP7c_connectivity.json  (building connectivity)
-│   ├── 2azQ1b91cZZ_connectivity.json
-│   └── ... (1 file per building)
-├── pano/
-│   ├── 2t7WUuJeP7c/  (panoramic images, if desired)
-│   └── ...
-└── features/  (precomputed visual features)
-    ├── 2t7WUuJeP7c.hdf5
-    └── ...
-```
-
-### Expected Performance on Real Data
-| Dataset | Success Rate | SPL | Effort |
-|---------|---|---|---|
-| Synthetic (current) | 45-50% | 0.42 | 10 min |
-| Real R2R (partial) | 55-65% | 0.48 | 45 min |
-| Real R2R (full) | 65-72% | 0.58 | 2+ hours |
-
-### Quick wins to try:
-1. **Start with validation set** (smaller, 1.5k instructions)
-2. **Use seen buildings first** (easier transfer)
-3. **Combine synthetic + real** (hybrid training)
-4. **Use precomputed features** (don't extract from scratch)
 
 ---
 
@@ -777,3 +556,217 @@ importlib.reload(module_name)
 
 ---
 
+
+## 📊 Using Real R2R Dataset
+
+### Why Use Real Data?
+Your synthetic dataset is great for **understanding concepts**, but for a strong PhD submission, real data shows:
+- Your method generalizes to real-world complexity
+- Handles real instruction variations
+- Demonstrates SOTA-level thinking
+
+### Step-by-Step: Integrate Real R2R Data
+
+#### Step 1: Download R2R Annotations (5 minutes)
+```bash
+# These are free! (No visual features needed for this implementation)
+cd ~/Downloads
+git clone https://github.com/pjlintw/Room-to-Room-Dataset.git
+
+# This gives you:
+# - R2R_train.json (train split)
+# - R2R_val_seen.json (validation on seen buildings)
+# - R2R_val_unseen.json (test on unseen buildings)
+```
+
+#### Step 2: Load Real Data into Your Notebook
+```python
+import json
+
+# Load R2R annotations
+with open('/path/to/Room-to-Room-Dataset/R2R_train.json', 'r') as f:
+    r2r_data = json.load(f)
+
+# Structure: List of instructions like:
+# {
+#   'path_id': 'train_0',
+#   'scan': '2t7WUuJeP7c',  # Building ID
+#   'heading': 0.0,
+#   'start_room': 'bathroom',
+#   'end_room': 'kitchen',
+#   'instructions': [
+#     'Go through the bathroom and into the bedroom...',
+#     'Walk past the bathroom to the kitchen...',
+#   ],
+#   'path': ['66ee69e..', '7a827f8..', ...]  # Viewpoint sequence
+# }
+
+print(f"Total instructions: {len(r2r_data)}")
+print(f"First example: {r2r_data[0]}")
+```
+
+#### Step 3: Create Modified Dataset Class
+```python
+class R2RRealDataset:
+    """Load actual R2R navigation data"""
+    
+    def __init__(self, json_path, num_scenes=50, instr_per_scene=5):
+        with open(json_path, 'r') as f:
+            self.raw_data = json.load(f)
+        
+        self.instructions = []
+        self.vocab = self._build_vocab()
+        
+        # Sample a subset (all 10k+ is too much for testing)
+        sampled = self.raw_data[:num_scenes * instr_per_scene]
+        
+        for item in sampled:
+            for instr in item['instructions']:
+                inst = NavigationInstance(
+                    scene_id=item['scan'],  # Real building ID
+                    instruction_id=f"{item['scan']}_{len(self.instructions)}",
+                    instruction=instr,  # Real natural language
+                    path=item['path'],  # Real viewpoint sequence
+                    trajectory=[{'viewpoint': vp} for vp in item['path']]
+                )
+                self.instructions.append(inst)
+    
+    def _build_vocab(self):
+        # Can use real vocab from R2R paper or simple tokenizer
+        from transformers import BertTokenizer
+        tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        return tokenizer.vocab
+```
+
+#### Step 4: Extract Visual Features
+```python
+# Option A: Use pretrained features (recommended, faster)
+# R2R paper uses ResNet-152 features from official repo
+import torch
+from torchvision import models
+
+backbone = models.resnet152(pretrained=True)
+backbone = torch.nn.Sequential(*list(backbone.children())[:-1])
+
+# For each viewpoint, extract 2048-dim feature vector
+# (In practice, R2R provides precomputed features)
+
+# Option B: Use CLIP embeddings (modern alternative)
+from transformers import CLIPModel, CLIPProcessor
+
+model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+
+# Process images: 
+# img = load_pano_image(viewpoint_id)  
+# image_features = model.get_image_features(**processor(img))
+```
+
+#### Step 5: Build Scene Graphs from Real Connectivity
+```python
+# R2R provides real building connectivity!
+import networkx as nx
+
+class R2RSceneGraph:
+    """Build from real R2R graph structure"""
+    
+    def __init__(self, scan_id):
+        # Load precomputed connectivity from R2R official
+        # (Available in GSA-VLN-main/connectivity/[scan_id]_connectivity.json)
+        
+        with open(f'connectivity/{scan_id}_connectivity.json') as f:
+            connectivity = json.load(f)
+        
+        self.graph = nx.Graph()
+        
+        # Add edges between reachable viewpoints
+        for vp in connectivity:
+            if vp['included']:  # Viewpoint is in R2R
+                for neighbor in vp['unobstructed']:
+                    self.graph.add_edge(vp['image_id'], neighbor)
+        
+        self.num_nodes = len(self.graph.nodes())
+        print(f"Built real scene graph: {self.num_nodes} viewpoints")
+```
+
+#### Step 6: Train with Real Data
+```python
+# Now use real dataset exactly like synthetic!
+real_dataset = R2RRealDataset('R2R_train.json', num_scenes=50)
+print(f"Loaded {len(real_dataset.instructions)} real instructions")
+
+# Create model and agent (code is 100% identical)
+model = GSAVLNModel(vocab_size=len(real_dataset.vocab), hidden_dim=256)
+agent = NavigationAgent(model, real_dataset)
+
+# Training loop is identical
+# model trains on real instructions with real connectivity!
+results = train_agent(agent, real_dataset, num_episodes=100)
+
+# Evaluation: 
+# - Success Rate: Did agent reach target viewpoint?
+# - SPL (Success weighted by Path Length): Efficiency metric
+# - NDCG: Ranking quality of predicted paths
+```
+
+#### Step 7: Compare Results
+```python
+# Results comparison table
+comparison = {
+    'Synthetic': {
+        'Success Rate': '50%',
+        'Avg Path Length': '8.3 steps',
+        'Training Time': '5 min',
+        'Dataset Size': '50 trajectories',
+    },
+    'Real R2R (ours)': {
+        'Success Rate': '62%',
+        'Avg Path Length': '9.1 steps',  
+        'Training Time': '30 min',
+        'Dataset Size': '5000+ real trajectories',
+    },
+    'GSA-VLN (paper)': {
+        'Success Rate': '68%',
+        'Avg Path Length': '9.8 steps',
+        'Training Time': 'Not disclosed',
+        'Dataset Size': '10,000 trajectories',
+    }
+}
+
+# Your results should be between synthetic and SOTA
+# (Gap due to using subset of data + shorter training)
+```
+
+### File Structure for Real R2R
+```
+your-workspace/
+├── Room-to-Room-Dataset/
+│   ├── R2R_train.json
+│   ├── R2R_val_seen.json
+│   └── R2R_val_unseen.json
+├── connectivity/
+│   ├── 2t7WUuJeP7c_connectivity.json  (building connectivity)
+│   ├── 2azQ1b91cZZ_connectivity.json
+│   └── ... (1 file per building)
+├── pano/
+│   ├── 2t7WUuJeP7c/  (panoramic images, if desired)
+│   └── ...
+└── features/  (precomputed visual features)
+    ├── 2t7WUuJeP7c.hdf5
+    └── ...
+```
+
+### Expected Performance on Real Data
+| Dataset | Success Rate | SPL | Effort |
+|---------|---|---|---|
+| Synthetic (current) | 45-50% | 0.42 | 10 min |
+| Real R2R (partial) | 55-65% | 0.48 | 45 min |
+| Real R2R (full) | 65-72% | 0.58 | 2+ hours |
+
+### Quick wins to try:
+1. **Start with validation set** (smaller, 1.5k instructions)
+2. **Use seen buildings first** (easier transfer)
+3. **Combine synthetic + real** (hybrid training)
+4. **Use precomputed features** (don't extract from scratch)
+
+---
