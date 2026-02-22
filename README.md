@@ -8,8 +8,13 @@
 |----------|------|-------------|
 | 📄 Original Paper | [![arXiv](https://img.shields.io/badge/arXiv-2501.17403-b31b1b.svg)](https://arxiv.org/pdf/2501.17403) | Graph Scene Adaptation for Vision-Language Navigation |
 | 📓 Simplified Notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1gTOXxZv9q_B0J_m2fNjeyF0KnnZ63ChV) | Simplified Implementation for Learning |
+| 📓 Simplified Notebook Improved | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1wwf5eyJDtaKhQPxvJhk--xzuRM2QsGZp) | Simplified Implementation for Learning |
+
 | 📓 Semantic Notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rvpFH8pv_Z9umDILUTcCes1Sg1n6V1tJ) | Semantic-Aware Navigation |
+| 📓 Semantic Notebook Improved | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1xVCmPmml3B66gZHbvIKTlgExMXYn9H5i) | Semantic-Aware Navigation |
+
 | 📓 Replay Notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MPJ5UMa54uo6DqHHoHNqpdqt5tJ-vVnE) | Experience Replay for Continual Learning |
+| 📓 Replay Notebook Improved | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1B8N4RmpvePfCOR0tBt4udPM6sgBl4bGa) | Experience Replay for Continual Learning |
 
 
 ---
