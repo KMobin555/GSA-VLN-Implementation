@@ -7,12 +7,9 @@
 | Resource | Link | Description |
 |----------|------|-------------|
 | 📄 Original Paper | [![arXiv](https://img.shields.io/badge/arXiv-2501.17403-b31b1b.svg)](https://arxiv.org/pdf/2501.17403) | Graph Scene Adaptation for Vision-Language Navigation |
-| 📓 Simplified Notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1gTOXxZv9q_B0J_m2fNjeyF0KnnZ63ChV) | Simplified Implementation for Learning |
-| 📓 Simplified Notebook Improved | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1wwf5eyJDtaKhQPxvJhk--xzuRM2QsGZp) | Simplified Implementation for Learning |
-| 📓 Semantic Notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rvpFH8pv_Z9umDILUTcCes1Sg1n6V1tJ) | Semantic-Aware Navigation |
-| 📓 Semantic Notebook Improved | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1xVCmPmml3B66gZHbvIKTlgExMXYn9H5i) | Semantic-Aware Navigation |
-| 📓 Replay Notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1MPJ5UMa54uo6DqHHoHNqpdqt5tJ-vVnE) | Experience Replay for Continual Learning |
-| 📓 Replay Notebook Improved | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1B8N4RmpvePfCOR0tBt4udPM6sgBl4bGa) | Experience Replay for Continual Learning |
+| 📓 Baseline Notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/17CNnEixo4WQR1iISUkO-HErjmglPrZ7_?usp=sharing) | Implementation for Learning |
+| 📓 Semantic Notebook Improved | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h9M63ALpQuXel84hsdMIQEobiAg9yYiG?usp=sharing) | Semantic-Aware Navigation |
+| 📓 Continual Learning Notebook | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/11Dpi1ysfSdSWLedJaYzvNbEudCAGtgZy?usp=sharing) | Continual Learning |
 
 
 ---
@@ -52,10 +49,14 @@ Scene graphs + persistent memory (GraphMap) enable robots to:
 
 ```
 GSA-VLN-Implementation/
-├── README.md                          # This file
-├── GSA-VLN-Original.ipynb             # MAIN: Full paper replication
-├── GSA-VLN-SEMANTIC.ipynb            # IMPROVEMENT 1: Semantic-aware navigation
-├── GSA-VLN-REPLAY.ipynb              # IMPROVEMENT 2: Experience replay
+├── README.md
+├── GSA_VLN_ORIGINAL_Real_Data.ipynb                  # MAIN: Paper replication (real R2R data)
+├── GSA_VLN_SEMANTIC_Real_Data.ipynb                  # IMPROVEMENT 1: Semantic-aware navigation (real R2R data)
+├── GAS_VLN_CONTINUAL_LEARNING_Real_Data.ipynb        # IMPROVEMENT 2: Experience Replay + Continual Learning (real R2R data)
+└── old/                                              # Previous experiments with synthetic data
+├── GSA-VLN-Original-Synthetic.ipynb
+├── GSA-VLN-SEMANTIC-Synthetic.ipynb
+└── GSA-VLN-REPLAY-Synthetic.ipynb
 ```
 
 ---
