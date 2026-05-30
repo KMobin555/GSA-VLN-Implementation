@@ -13,7 +13,6 @@
 | Notebook 1 — Baseline | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/17CNnEixo4WQR1iISUkO-HErjmglPrZ7_?usp=sharing) | Paper replication on real R2R data |
 | Notebook 2 — Semantic | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1h9M63ALpQuXel84hsdMIQEobiAg9yYiG?usp=sharing) | Semantic-aware navigation (novel improvement) |
 | Notebook 3 — Continual | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/11Dpi1ysfSdSWLedJaYzvNbEudCAGtgZy?usp=sharing) | Experience Replay continual learning (novel improvement) |
-| GitHub | [KMobin555/GSA-VLN-Implementation](https://github.com/KMobin555/GSA-VLN-Implementation) | Source code |
 
 ---
 
